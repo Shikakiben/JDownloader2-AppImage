@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-pacman -Sy --noconfirm wget p7zip gzip
+pacman -Sy --noconfirm wget p7zip gzip which
 
 
 # Diagnostics avant test gunzip (affichés dans les logs du workflow)
