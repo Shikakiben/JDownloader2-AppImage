@@ -5,7 +5,7 @@ set -e
 # Téléchargement JDownloader2
 mkdir -p jd2
 wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
-bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
+xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 
 # Téléchargement OpenJDK
 mkdir -p jd2/jre
@@ -13,7 +13,7 @@ wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin17-binaries/releases/d
 tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 
 # Préparation AppDir
-mkdir -p AppDir/bin
+mkdir -p AppDir/bin AppDir/jd2
 cp jd2/JDownloader2 AppDir/jd2/JDownloader2
 cp -r jd2/* AppDir/jd2/
 # Récupération dynamique du .desktop et de l'icône
