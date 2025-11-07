@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+# Détection du dossier AppDir
+if [ -n "${APPDIR:-}" ]; then
+  BUNDLE_ROOT="$APPDIR"
+else
+  BUNDLE_ROOT=$(cd "${0%/*}/.." && pwd)
+  APPDIR="$BUNDLE_ROOT"
+fi
+
+BUNDLE_JD="${BUNDLE_ROOT}/jd2"
+
+if [ ! -x "${BUNDLE_JD}/JDownloader2" ]; then
+  printf 'JDownloader2 introuvable dans %s\n' "$BUNDLE_JD" >&2
+  exit 1
+fi
+
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2-AppImage}"
+STAMP_FILE="${PERSIST_DIR}/.appimage-source"
+CURRENT_STAMP="${APPIMAGE:-$BUNDLE_ROOT}"
+
+mkdir -p "$PERSIST_DIR"
+
+if [ ! -e "$STAMP_FILE" ]; then
+  printf 'Initialisation du profil JDownloader dans %s\n' "$PERSIST_DIR" >&2
+  cp -a "${BUNDLE_JD}/." "$PERSIST_DIR/"
+fi
+
+printf '%s\n' "$CURRENT_STAMP" > "$STAMP_FILE"
+
+cd "$PERSIST_DIR"
+exec "$PERSIST_DIR/JDownloader2" "$@"
+exit "$?"
+
