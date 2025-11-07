@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
+
 # Téléchargement JDownloader2
 mkdir -p jd2
 wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
-bash JD2Setup_x64.sh -q -dir jd2
+bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 
 # Téléchargement OpenJDK
 mkdir -p jd2/jre
