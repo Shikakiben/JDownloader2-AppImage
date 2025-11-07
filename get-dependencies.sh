@@ -21,9 +21,20 @@ if ! command -v gunzip >/dev/null 2>&1; then
     fi
 fi
 
-# Re-vérifie la présence de gunzip
-if ! command -v gunzip >/dev/null 2>&1; then
-    echo "Erreur : impossible de créer gunzip. Abandon."
-    exit 1
+
+# Debug : affiche le test utilisé
+echo "Test gunzip avec : command -v gunzip"
+if command -v gunzip >/dev/null 2>&1; then
+    echo "gunzip trouvé via command -v"
+else
+    echo "gunzip NON trouvé via command -v"
+    echo "Test gunzip avec : [ -x /usr/bin/gunzip ]"
+    if [ -x /usr/bin/gunzip ]; then
+        echo "gunzip est exécutable dans /usr/bin/gunzip"
+    else
+        echo "gunzip n'est PAS exécutable dans /usr/bin/gunzip"
+        echo "Erreur : impossible de créer gunzip. Abandon."
+        exit 1
+    fi
 fi
 
