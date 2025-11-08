@@ -38,7 +38,7 @@ chmod +x AppDir/bin/JDownloader2
 # Crée AppRun pour AppImage
 cat > AppDir/AppRun <<'EOF'
 #!/bin/sh
-HERE="$(dirname \"$(readlink -f "$0")")"
+HERE="$(dirname "$(readlink -f "$0")")"
 exec "$HERE/bin/JDownloader2" "$@"
 EOF
 chmod +x AppDir/AppRun
