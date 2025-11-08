@@ -21,7 +21,7 @@ INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash JD2Setup_x64.sh -q -dir "${P
 # Préparation AppDir
 mkdir -p AppDir/bin AppDir/jd2
 cp jd2/JDownloader2 AppDir/jd2/JDownloader2
-cp -r jd2/* AppDir/jd2/
+cp -a jd2/. AppDir/jd2/
 # Récupération dynamique du .desktop et de l'icône
 cp "jd2/JDownloader 2.desktop" AppDir/JDownloader2.desktop
 cp "jd2/.install4j/JDownloader2.png" AppDir/.DirIcon
