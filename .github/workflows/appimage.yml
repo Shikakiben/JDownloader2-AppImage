@@ -42,7 +42,22 @@ jobs:
 
       - name: Read version information
         run: |
-          VERSION=$(cat dist/version)
+          set -euo pipefail
+          VERSION_FILE=$(find . -maxdepth 3 -type f -name version | head -n 1)
+          if [ -n "$VERSION_FILE" ]; then
+            VERSION=$(cat "$VERSION_FILE")
+          else
+            APPIMAGE=$(find . -maxdepth 2 -type f -name 'JDownloader2-*.AppImage' | head -n 1)
+            if [ -z "$APPIMAGE" ]; then
+              echo "Unable to determine version (version file and AppImage missing)." >&2
+              exit 1
+            fi
+            BASENAME=$(basename "$APPIMAGE")
+            BASENAME=${BASENAME%.AppImage}
+            DATE_PART=${BASENAME#JDownloader2-}
+            DATE_PART=${DATE_PART%-x86_64}
+            VERSION="JDownloader2 ${DATE_PART}"
+          fi
           echo "VERSION=$VERSION" >> "${GITHUB_ENV}"
           TAG=$(printf '%s' "$VERSION" | cut -d' ' -f2)
           if [ -z "$TAG" ]; then
