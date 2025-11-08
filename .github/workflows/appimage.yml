@@ -57,4 +57,4 @@ jobs:
           fail_on_unmatched_files: false
           make_latest: true
           files: |
-            dist/*.AppImage*
+            *.AppImage*
