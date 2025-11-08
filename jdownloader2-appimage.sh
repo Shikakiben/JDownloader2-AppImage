@@ -15,7 +15,19 @@ tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 
 # Téléchargement JDownloader2
 mkdir -p jd2
-megadl --path=jd2 "https://mega.nz/file/qU1TCYjL#g8a05FYWPGyqFgy1QWQ9L5nScEOmOU6iZh1eDhSn-sk"
+python - <<'PY'
+from pathlib import Path
+from mega import Mega
+
+mega = Mega()
+client = mega.login()
+target_dir = Path("jd2")
+target_dir.mkdir(parents=True, exist_ok=True)
+client.download_url(
+	"https://mega.nz/file/qU1TCYjL#g8a05FYWPGyqFgy1QWQ9L5nScEOmOU6iZh1eDhSn-sk",
+	dest_path=str(target_dir)
+)
+PY
 INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash jd2/JDownloader2Setup_unix_nojre.sh -q -dir "${PWD}/jd2"
 
 # Préparation AppDir
