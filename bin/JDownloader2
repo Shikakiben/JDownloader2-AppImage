@@ -55,7 +55,9 @@ export INSTALL4J_JAVA_HOME="$BUNDLE_ROOT/jd2/jre"
 
 adjust_nofile_limit() {
   target=1048576
-  soft_limit=$(ulimit -Sn 2>/dev/null || printf '')
+
+  # dash busybox n'acceptent pas tous l'option -Sn ; on tente plusieurs syntaxes.
+  soft_limit=$(ulimit -Sn 2>/dev/null || ulimit -n 2>/dev/null || printf '')
   hard_limit=$(ulimit -Hn 2>/dev/null || printf '')
 
   needs_adjustment=false
@@ -66,7 +68,7 @@ adjust_nofile_limit() {
       needs_adjustment=true
       ;;
     * )
-      if printf '%s\n' "$soft_limit" | grep -Eq '^[0-9]+$' && [ "$soft_limit" -gt "$target" ]; then
+      if printf '%s\n' "$soft_limit" | grep -Eq '^[0-9]+' && [ "$soft_limit" -gt "$target" ]; then
         needs_adjustment=true
       fi
       ;;
@@ -74,14 +76,16 @@ adjust_nofile_limit() {
 
   if [ "$needs_adjustment" = true ]; then
     new_limit=$target
-    if printf '%s\n' "$hard_limit" | grep -Eq '^[0-9]+$'; then
+    if [ "$hard_limit" = "unlimited" ] || [ "$hard_limit" = "infinity" ]; then
+      :
+    elif printf '%s\n' "$hard_limit" | grep -Eq '^[0-9]+'; then
       if [ "$hard_limit" -lt "$new_limit" ]; then
         new_limit=$hard_limit
       fi
     fi
 
-    # Si l'ajustement échoue (par ex. hard limit plus basse), on ignore l'erreur.
-    ulimit -Sn "$new_limit" 2>/dev/null || true
+    # Essayez l'option POSIX (-S -n), retombez sur la forme simple si nécessaire.
+    ulimit -S -n "$new_limit" 2>/dev/null || ulimit -n "$new_limit" 2>/dev/null || true
   fi
 }
 
