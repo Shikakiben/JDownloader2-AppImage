@@ -85,6 +85,7 @@ launcher.write_text(patched)
 PY
 
 # Préparation AppDir
+rm -rf AppDir
 mkdir -p AppDir/bin AppDir/jd2
 cp jd2/JDownloader2 AppDir/jd2/JDownloader2
 cp -a jd2/. AppDir/jd2/
@@ -94,13 +95,6 @@ cp "jd2/.install4j/JDownloader2.png" AppDir/.DirIcon
 cp bin/JDownloader2 AppDir/bin/JDownloader2
 # S'assurer que le lanceur est exécutable
 chmod +x AppDir/bin/JDownloader2
-# Crée AppRun pour AppImage
-cat > AppDir/AppRun <<'EOF'
-#!/bin/sh
-HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/bin/JDownloader2" "$@"
-EOF
-chmod +x AppDir/AppRun
 
 # Construction AppImage
 wget -O quick-sharun.sh https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/main/useful-tools/quick-sharun.sh
