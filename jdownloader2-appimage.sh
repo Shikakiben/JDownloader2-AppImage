@@ -10,13 +10,13 @@ UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest
 
 # Téléchargement OpenJDK
 mkdir -p jd2/jre
-wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u402-b06/OpenJDK8U-jre_x64_linux_hotspot_8u402b06.tar.gz
+wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.3_9.tar.gz
 tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 
 # Téléchargement JDownloader2
 mkdir -p jd2
-wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
-INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
+wget -O JDownloader2Setup_unix_nojre.sh https://installer.jdownloader.org/JDownloader2Setup_unix_nojre.sh
+INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash JDownloader2Setup_unix_nojre.sh -q -dir "${PWD}/jd2"
 
 # Préparation AppDir
 mkdir -p AppDir/bin AppDir/jd2
