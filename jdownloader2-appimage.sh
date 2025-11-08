@@ -26,10 +26,14 @@ mkdir -p "$INSTALL_DIR"
 INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash "$INSTALLER_PATH" -q -overwrite -dir "$INSTALL_DIR" -var sys.installationDir="$INSTALL_DIR"
 
 # Déplacer l'installation effective dans jd2/ sans conserver de dossier avec espaces
+
+# Renommer le dossier avec espace si présent
+if [ -d "${INSTALL_WORKDIR}/JDownloader 2" ]; then
+	mv "${INSTALL_WORKDIR}/JDownloader 2" "${INSTALL_WORKDIR}/JDownloader2"
+fi
+
 if [ -d "$INSTALL_DIR" ]; then
 	src_dir="$INSTALL_DIR"
-elif [ -d "${INSTALL_WORKDIR}/JDownloader 2" ]; then
-	src_dir="${INSTALL_WORKDIR}/JDownloader 2"
 elif [ -d "${INSTALL_WORKDIR}/JDownloader2" ]; then
 	src_dir="${INSTALL_WORKDIR}/JDownloader2"
 else
@@ -42,11 +46,17 @@ fi
 rm -rf "$INSTALL_WORKDIR"
 
 # Préparation AppDir
+# Préparation AppDir sans espace
 mkdir -p AppDir/bin AppDir/jd2
 cp jd2/JDownloader2 AppDir/jd2/JDownloader2
 cp -r jd2/* AppDir/jd2/
-# Récupération dynamique du .desktop et de l'icône
-cp "jd2/JDownloader 2.desktop" AppDir/JDownloader2.desktop
+# Récupération dynamique du .desktop et de l'icône (sans espace)
+if [ -f "jd2/JDownloader2.desktop" ]; then
+	cp "jd2/JDownloader2.desktop" AppDir/JDownloader2.desktop
+elif [ -f "jd2/JDownloader 2.desktop" ]; then
+	mv "jd2/JDownloader 2.desktop" "jd2/JDownloader2.desktop"
+	cp "jd2/JDownloader2.desktop" AppDir/JDownloader2.desktop
+fi
 cp "jd2/.install4j/JDownloader2.png" AppDir/.DirIcon
 cp bin/JDownloader2 AppDir/bin/JDownloader2
 # S'assurer que le lanceur est exécutable
