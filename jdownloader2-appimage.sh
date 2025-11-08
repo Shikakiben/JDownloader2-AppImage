@@ -13,30 +13,15 @@ mkdir -p jd2/jre
 wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.3_9.tar.gz
 tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 
-# Téléchargement JDownloader2
+# Préparation installation JDownloader2 (le script est versionné dans le dépôt)
 mkdir -p jd2
-python - <<'PY'
-import asyncio
-import types
-from pathlib import Path
-
-# Compatibilité Python >=3.13 où asyncio.coroutine est supprimé
-if not hasattr(asyncio, "coroutine"):
-	asyncio.coroutine = types.coroutine
-
-from mega import Mega
-
-mega = Mega()
-client = mega.login()
-target_dir = Path("jd2")
-target_dir.mkdir(parents=True, exist_ok=True)
-client.download_url(
-	"https://mega.nz/file/qU1TCYjL#g8a05FYWPGyqFgy1QWQ9L5nScEOmOU6iZh1eDhSn-sk",
-	dest_path=str(target_dir)
-)
-PY
+INSTALLER_PATH="${PWD}/JDownloader2Setup_unix_nojre.sh"
+if [ ! -x "$INSTALLER_PATH" ]; then
+	chmod +x "$INSTALLER_PATH"
+fi
 INSTALL_DIR="${PWD}/jd2/install"
-INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash jd2/JDownloader2Setup_unix_nojre.sh -q -dir "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR"
+INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash "$INSTALLER_PATH" -q -dir "$INSTALL_DIR"
 
 # Déplacer l'installation effective dans jd2/ sans conserver de dossier avec espaces
 if [ -d "jd2/install" ]; then
