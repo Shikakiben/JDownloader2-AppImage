@@ -40,17 +40,22 @@ jobs:
           pattern: AppImage-*
           merge-multiple: true
 
-      - name: Read version and Get date
+      - name: Read version information
         run: |
-          echo "${{ github.ref_name }}" > ./version
-          echo "VERSION=$(cat ./version)" >> "${GITHUB_ENV}"
+          VERSION=$(cat dist/version)
+          echo "VERSION=$VERSION" >> "${GITHUB_ENV}"
+          TAG=$(printf '%s' "$VERSION" | cut -d' ' -f2)
+          if [ -z "$TAG" ]; then
+            TAG=$(printf '%s' "$VERSION" | tr ' ' '_')
+          fi
+          echo "TAG=$TAG" >> "${GITHUB_ENV}"
           echo "DATE=$(date +'%Y-%m-%d_%s')" >> "${GITHUB_ENV}"
 
       - name: Release Artifacts
         uses: softprops/action-gh-release@v2.2.2
         with:
-          name: "JDownloader2: ${{ env.VERSION }}"
-          tag_name: "${{ env.VERSION }}@${{ env.DATE }}"
+          name: "${{ env.VERSION }}"
+          tag_name: "${{ env.TAG }}@${{ env.DATE }}"
           prerelease: false
           draft: false
           generate_release_notes: false

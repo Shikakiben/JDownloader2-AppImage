@@ -54,19 +54,34 @@ export JAVA_HOME="$BUNDLE_ROOT/jd2/jre"
 export INSTALL4J_JAVA_HOME="$BUNDLE_ROOT/jd2/jre"
 
 adjust_nofile_limit() {
-  current_limit=$(ulimit -n 2>/dev/null || printf '')
-  case "$current_limit" in
+  target=1048576
+  soft_limit=$(ulimit -Sn 2>/dev/null || printf '')
+  hard_limit=$(ulimit -Hn 2>/dev/null || printf '')
+
+  needs_adjustment=false
+
+  case "$soft_limit" in
     '' ) return ;;
-    unlimited )
-      ulimit -n 1048576 2>/dev/null || true
-      return
+    unlimited | infinity )
+      needs_adjustment=true
+      ;;
+    * )
+      if printf '%s\n' "$soft_limit" | grep -Eq '^[0-9]+$' && [ "$soft_limit" -gt "$target" ]; then
+        needs_adjustment=true
+      fi
       ;;
   esac
 
-  if printf '%s\n' "$current_limit" | grep -Eq '^[0-9]+$'; then
-    if [ "$current_limit" -gt 1048576 ]; then
-      ulimit -n 1048576 2>/dev/null || true
+  if [ "$needs_adjustment" = true ]; then
+    new_limit=$target
+    if printf '%s\n' "$hard_limit" | grep -Eq '^[0-9]+$'; then
+      if [ "$hard_limit" -lt "$new_limit" ]; then
+        new_limit=$hard_limit
+      fi
     fi
+
+    # Si l'ajustement échoue (par ex. hard limit plus basse), on ignore l'erreur.
+    ulimit -Sn "$new_limit" 2>/dev/null || true
   fi
 }
 
