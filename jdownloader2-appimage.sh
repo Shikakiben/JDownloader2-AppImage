@@ -10,62 +10,20 @@ UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest
 
 # Téléchargement OpenJDK
 mkdir -p jd2/jre
-wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jre_x64_linux_hotspot_21.0.3_9.tar.gz
+wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u402-b06/OpenJDK8U-jre_x64_linux_hotspot_8u402b06.tar.gz
 tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 
-# Préparation installation JDownloader2 (le script est versionné dans le dépôt)
+# Téléchargement JDownloader2
 mkdir -p jd2
-INSTALLER_PATH="${PWD}/JDownloader2Setup_unix_nojre.sh"
-if [ ! -x "$INSTALLER_PATH" ]; then
-	chmod +x "$INSTALLER_PATH"
-fi
-INSTALL_WORKDIR="${PWD}/jd2/install"
-INSTALL_DIR="${INSTALL_WORKDIR}/target"
-rm -rf "$INSTALL_WORKDIR"
-mkdir -p "$INSTALL_DIR"
-INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash "$INSTALLER_PATH" -q -overwrite -dir "$INSTALL_DIR" -var sys.installationDir="$INSTALL_DIR"
+wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
+INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 
-# Déplacer l'installation effective dans jd2/ sans conserver de dossier avec espaces
-
-# Renommer le dossier avec espace si présent
-
-if [ -d "$INSTALL_DIR" ]; then
-	src_dir="$INSTALL_DIR"
-elif [ -d "${INSTALL_WORKDIR}/JDownloader 2" ]; then
-	src_dir="${INSTALL_WORKDIR}/JDownloader 2"
-elif [ -d "${INSTALL_WORKDIR}/JDownloader2" ]; then
-	src_dir="${INSTALL_WORKDIR}/JDownloader2"
-else
-	src_dir="$INSTALL_WORKDIR"
-fi
-
-if [ -n "$src_dir" ] && [ -d "$src_dir" ]; then
-	cp -a "$src_dir"/. jd2/
-fi
-rm -rf "$INSTALL_WORKDIR"
-
-# Préparation AppDir
-# Préparation AppDir sans espace
 # Préparation AppDir
 mkdir -p AppDir/bin AppDir/jd2
 cp jd2/JDownloader2 AppDir/jd2/JDownloader2
 cp -r jd2/* AppDir/jd2/
-# Correction automatique du .desktop
-if [ -f "jd2/JDownloader 2.desktop" ]; then
-	sed -i \
-		-e 's/^Name=.*/Name=JDownloader2/' \
-		-e 's|^Exec=.*|Exec=JDownloader2 %U|' \
-		-e 's|^Icon=.*|Icon=.install4j/JDownloader2.png|' \
-		jd2/JDownloader\ 2.desktop
-	cp jd2/JDownloader\ 2.desktop AppDir/JDownloader2.desktop
-elif [ -f "jd2/JDownloader2.desktop" ]; then
-	sed -i \
-		-e 's/^Name=.*/Name=JDownloader2/' \
-		-e 's|^Exec=.*|Exec=JDownloader2 %U|' \
-		-e 's|^Icon=.*|Icon=.install4j/JDownloader2.png|' \
-		jd2/JDownloader2.desktop
-	cp jd2/JDownloader2.desktop AppDir/JDownloader2.desktop
-fi
+# Récupération dynamique du .desktop et de l'icône
+cp "jd2/JDownloader 2.desktop" AppDir/JDownloader2.desktop
 cp "jd2/.install4j/JDownloader2.png" AppDir/.DirIcon
 cp bin/JDownloader2 AppDir/bin/JDownloader2
 # S'assurer que le lanceur est exécutable
