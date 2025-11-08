@@ -16,7 +16,14 @@ tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
 # Téléchargement JDownloader2
 mkdir -p jd2
 python - <<'PY'
+import asyncio
+import types
 from pathlib import Path
+
+# Compatibilité Python >=3.13 où asyncio.coroutine est supprimé
+if not hasattr(asyncio, "coroutine"):
+	asyncio.coroutine = types.coroutine
+
 from mega import Mega
 
 mega = Mega()
