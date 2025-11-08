@@ -7,6 +7,19 @@ mkdir -p jd2
 wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
 xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 
+
+# Variables
+ARCH="$(uname -m)"
+PACKAGE="JDownloader2"
+VERSION="${VERSION:-dev}"
+OUTNAME="$PACKAGE-$VERSION-anylinux-$ARCH.AppImage"
+UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
+
+# Téléchargement JDownloader2
+mkdir -p jd2
+wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
+xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
+
 # Téléchargement OpenJDK
 mkdir -p jd2/jre
 wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.10+7/OpenJDK17U-jre_x64_linux_hotspot_17.0.10_7.tar.gz
@@ -25,7 +38,7 @@ chmod +x AppDir/bin/JDownloader2
 # Crée AppRun pour AppImage
 cat > AppDir/AppRun <<'EOF'
 #!/bin/sh
-HERE="$(dirname "$(readlink -f "$0")")"
+HERE="$(dirname \"$(readlink -f \"$0\")")"
 exec "$HERE/bin/JDownloader2" "$@"
 EOF
 chmod +x AppDir/AppRun
@@ -33,9 +46,14 @@ chmod +x AppDir/AppRun
 # Construction AppImage
 wget -O quick-sharun.sh https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/main/useful-tools/quick-sharun.sh
 chmod +x quick-sharun.sh
-STARTUPWMCLASS=JDownloader2 VERSION=${VERSION:-dev} ./quick-sharun.sh --make-appimage
-mkdir -p dist
+export UPINFO
+export OUTNAME
+export STARTUPWMCLASS=JDownloader2
+export VERSION
+./quick-sharun.sh --make-appimage
 
-mv JDownloader_2-*-x86_64.AppImage dist/
-mv JDownloader_2-*-x86_64.AppImage.zsync dist/ 2>/dev/null || true
+# Préparation pour release
+mkdir -p dist
+mv -v ./*.AppImage* dist/
+echo "$VERSION" > dist/version
 
