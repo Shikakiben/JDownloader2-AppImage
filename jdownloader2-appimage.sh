@@ -1,13 +1,6 @@
 #!/bin/bash
 set -e
 
-
-# Téléchargement JDownloader2
-mkdir -p jd2
-wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
-xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
-
-
 # Variables
 ARCH="$(uname -m)"
 PACKAGE="JDownloader2"
@@ -15,15 +8,15 @@ DATE="$(date +'%Y%m%d')"
 OUTNAME="$PACKAGE-$DATE-$ARCH.AppImage"
 UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
 
+# Téléchargement OpenJDK
+mkdir -p jd2/jre
+wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u402-b06/OpenJDK8U-jre_x64_linux_hotspot_8u402b06.tar.gz
+tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
+
 # Téléchargement JDownloader2
 mkdir -p jd2
 wget -O JD2Setup_x64.sh https://installer.jdownloader.org/JD2Setup_x64.sh
-xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
-
-# Téléchargement OpenJDK
-mkdir -p jd2/jre
-wget -O OpenJDK.tar.gz https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.10+7/OpenJDK17U-jre_x64_linux_hotspot_17.0.10_7.tar.gz
-tar -xzf OpenJDK.tar.gz --strip-components=1 -C jd2/jre
+INSTALL4J_JAVA_HOME="$PWD/jd2/jre" xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 
 # Préparation AppDir
 mkdir -p AppDir/bin AppDir/jd2
