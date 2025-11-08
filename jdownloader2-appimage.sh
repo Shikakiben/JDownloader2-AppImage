@@ -11,8 +11,8 @@ xvfb-run -a bash JD2Setup_x64.sh -q -dir "${PWD}/jd2"
 # Variables
 ARCH="$(uname -m)"
 PACKAGE="JDownloader2"
-VERSION="${VERSION:-dev}"
-OUTNAME="$PACKAGE-$VERSION-anylinux-$ARCH.AppImage"
+DATE="$(date +'%Y%m%d')"
+OUTNAME="$PACKAGE-$DATE-$ARCH.AppImage"
 UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
 
 # Téléchargement JDownloader2
@@ -49,11 +49,11 @@ chmod +x quick-sharun.sh
 export UPINFO
 export OUTNAME
 export STARTUPWMCLASS=JDownloader2
-export VERSION
+export VERSION="$DATE"
 ./quick-sharun.sh --make-appimage
 
 # Préparation pour release
 mkdir -p dist
 mv -v ./*.AppImage* dist/
-echo "$VERSION" > dist/version
+echo "$DATE" > dist/version
 
