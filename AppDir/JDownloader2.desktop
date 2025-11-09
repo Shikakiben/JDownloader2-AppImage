@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=JDownloader2
+Exec=JDownloader2 %U
+Icon=jdownloader2
+Categories=Network;Application;
+StartupWMClass=JDowloader

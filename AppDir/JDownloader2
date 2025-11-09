@@ -1,0 +1,98 @@
+#!/bin/bash
+# Lanceur universel JDownloader2 AppImage (JRE embarqué ou JVM externe)
+set -e
+
+if [ -n "${JD2_APPIMAGE_BUNDLE_DIR:-}" ]; then
+  APP_BUNDLE_ROOT="$JD2_APPIMAGE_BUNDLE_DIR"
+else
+  SCRIPT_PATH="${BASH_SOURCE[0]}"
+  while [ -L "$SCRIPT_PATH" ]; do
+    LINK_TARGET=$(readlink "$SCRIPT_PATH")
+    case "$LINK_TARGET" in
+      /*)
+        SCRIPT_PATH="$LINK_TARGET"
+        ;;
+      *)
+        SCRIPT_PATH="$(dirname "$SCRIPT_PATH")/$LINK_TARGET"
+        ;;
+    esac
+  done
+  SCRIPT_DIR=$(cd "$(dirname "$SCRIPT_PATH")" 2>/dev/null || exit 1; pwd)
+  APP_BUNDLE_ROOT="$SCRIPT_DIR"
+  for _ in 1 2; do
+    if [ -f "$APP_BUNDLE_ROOT/JDownloader.jar" ] || [ -d "$APP_BUNDLE_ROOT/AppDir" ]; then
+      break
+    fi
+    APP_BUNDLE_ROOT=$(cd "$APP_BUNDLE_ROOT/.." 2>/dev/null || exit 1; pwd)
+  done
+fi
+
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2-AppImage}"
+STAMP_FILE="$PERSIST_DIR/.appimage-source"
+STAMP_SOURCE="$APP_BUNDLE_ROOT/JDownloader.jar"
+
+if command -v sha256sum >/dev/null 2>&1 && [ -r "$STAMP_SOURCE" ]; then
+  CURRENT_STAMP=$(sha256sum "$STAMP_SOURCE" | awk '{print $1}')
+else
+  CURRENT_STAMP="$PWD"
+fi
+CURRENT_STAMP="${CURRENT_STAMP:-$PWD}"
+
+mkdir -p "$PERSIST_DIR"
+PREVIOUS_STAMP=$(cat "$STAMP_FILE" 2>/dev/null || printf '')
+
+if [ "$PREVIOUS_STAMP" != "$CURRENT_STAMP" ]; then
+  if [ -n "$PREVIOUS_STAMP" ]; then
+    printf 'Mise à jour du profil JDownloader dans %s\n' "$PERSIST_DIR" >&2
+  else
+    printf 'Initialisation du profil JDownloader dans %s\n' "$PERSIST_DIR" >&2
+  fi
+
+  if command -v rsync >/dev/null 2>&1; then
+      RSYNC_ARGS=(-a --no-perms --no-owner --no-group)
+      case "$PERSIST_DIR" in
+        "$APP_BUNDLE_ROOT"/*)
+          RSYNC_ARGS+=(--exclude "$(basename "$PERSIST_DIR")")
+          ;;
+      esac
+      rsync "${RSYNC_ARGS[@]}" "$APP_BUNDLE_ROOT/" "$PERSIST_DIR/"
+  else
+      cp -r "$APP_BUNDLE_ROOT/." "$PERSIST_DIR/"
+  fi
+
+  printf '%s\n' "$CURRENT_STAMP" > "$STAMP_FILE"
+fi
+
+  cd "$PERSIST_DIR"
+
+if [ ! -f "JDownloader.jar" ]; then
+    if [ -f "$APP_BUNDLE_ROOT/JDownloader.jar" ]; then
+      cp "$APP_BUNDLE_ROOT/JDownloader.jar" "$PERSIST_DIR/"
+    else
+      echo "Erreur : JDownloader.jar est introuvable dans $PERSIST_DIR." >&2
+      exit 2
+    fi
+fi
+
+JRE_LOCAL="$PERSIST_DIR/jre"
+JAVA_BIN=""
+
+if [ -x "$JRE_LOCAL/bin/java" ]; then
+  JAVA_BIN="$JRE_LOCAL/bin/java"
+elif [ -n "${INSTALL4J_JAVA_HOME:-}" ] && [ -x "$INSTALL4J_JAVA_HOME/bin/java" ]; then
+  JAVA_BIN="$INSTALL4J_JAVA_HOME/bin/java"
+elif [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+  JAVA_BIN="$JAVA_HOME/bin/java"
+else
+  JAVA_BIN=$(command -v java || true)
+fi
+
+if [ -z "$JAVA_BIN" ]; then
+  echo "Erreur : aucune JVM compatible trouvée (JRE embarqué ou système)." >&2
+  exit 83
+fi
+
+printf 'JVM utilisée : %s\n' "$JAVA_BIN" >&2
+
+exec "$JAVA_BIN" -jar JDownloader.jar "$@"
