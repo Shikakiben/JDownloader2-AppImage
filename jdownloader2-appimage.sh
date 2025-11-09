@@ -128,7 +128,7 @@ rm -f "$DESKTOP_TMP"
 # Construction AppImage
 export UPINFO
 export OUTNAME
-export STARTUPWMCLASS=JDownloader2
+export STARTUPWMCLASS=JDownloader
 export VERSION="$DATE_HUMAN"
 ./quick-sharun.sh --make-appimage
 
