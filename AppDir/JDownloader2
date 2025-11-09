@@ -89,7 +89,73 @@ else
 fi
 
 if [ -z "$JAVA_BIN" ]; then
-  echo "Erreur : aucune JVM compatible trouvée (JRE embarqué ou système)." >&2
+  if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
+    echo "Erreur : aucune JVM disponible et téléchargement automatique désactivé (JD2_APPIMAGE_SKIP_JRE_FETCH=1)." >&2
+    exit 83
+  fi
+
+  if [ -z "${JD2_APPIMAGE_JRE_URL:-}" ]; then
+    API_URL="https://api.adoptium.net/v3/assets/latest/25/hotspot?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&vendor=adoptium"
+    if command -v jq >/dev/null 2>&1; then
+      if command -v wget >/dev/null 2>&1; then
+        JRE_JSON=$(wget -qO- "$API_URL" || true)
+      else
+        JRE_JSON=$(curl -sSL "$API_URL" || true)
+      fi
+      JRE_URL=$(printf '%s' "$JRE_JSON" | jq -r '.[0].binary.package.link' 2>/dev/null || printf '')
+    fi
+
+    if [ -z "$JRE_URL" ] || [ "$JRE_URL" = "null" ]; then
+      JRE_URL="https://github.com/adoptium/temurin25-binaries/releases/latest/download/OpenJDK25U-jre_x64_linux_hotspot.tar.gz"
+    fi
+  else
+    JRE_URL="$JD2_APPIMAGE_JRE_URL"
+  fi
+
+  if [ -z "$JRE_URL" ] || [ "$JRE_URL" = "null" ]; then
+    echo "Erreur : impossible d'obtenir l'URL d'un JRE compatible." >&2
+    exit 83
+  fi
+  TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t jd2jre)
+  TARBALL="$TMPDIR/jre.tar.gz"
+
+  echo "Téléchargement d'un JRE compatible depuis $JRE_URL" >&2
+  if ! command -v wget >/dev/null 2>&1 && ! command -v curl >/dev/null 2>&1; then
+    echo "Erreur : wget ou curl est requis pour récupérer le JRE manquant." >&2
+    rm -rf "$TMPDIR"
+    exit 83
+  fi
+
+  if command -v wget >/dev/null 2>&1; then
+    if ! wget --retry-connrefused --tries=30 -O "$TARBALL" "$JRE_URL"; then
+      echo "Erreur : impossible de télécharger le JRE." >&2
+      rm -rf "$TMPDIR"
+      exit 83
+    fi
+  else
+    if ! curl -L --retry 30 --retry-connrefused -o "$TARBALL" "$JRE_URL"; then
+      echo "Erreur : impossible de télécharger le JRE." >&2
+      rm -rf "$TMPDIR"
+      exit 83
+    fi
+  fi
+
+  rm -rf "$JRE_LOCAL"
+  mkdir -p "$JRE_LOCAL"
+  if ! tar -xzf "$TARBALL" --strip-components=1 -C "$JRE_LOCAL"; then
+    echo "Erreur : impossible d'extraire le JRE téléchargé." >&2
+    rm -rf "$TMPDIR"
+    exit 83
+  fi
+  rm -rf "$TMPDIR"
+
+  if [ -x "$JRE_LOCAL/bin/java" ]; then
+    JAVA_BIN="$JRE_LOCAL/bin/java"
+  fi
+fi
+
+if [ -z "$JAVA_BIN" ]; then
+  echo "Erreur : aucune JVM compatible trouvée (JRE embarqué, téléchargé ou système)." >&2
   exit 83
 fi
 
