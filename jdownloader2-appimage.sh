@@ -6,10 +6,23 @@ DATE_HUMAN="$(date +'%y.%m.%d')"
 OUTNAME="JDownloader2-$DATE_HUMAN-$ARCH.AppImage"
 
 APPDIR="$PWD/AppDir"
+JRE_DIR="$APPDIR/jre"
 
-rm -rf "$APPDIR/jre"
+rm -rf "$JRE_DIR"
+mkdir -p "$JRE_DIR"
 
 wget --retry-connrefused --tries=30 -O "$APPDIR/JDownloader.jar" https://installer.jdownloader.org/JDownloader.jar
+
+JRE_JSON=$(wget -qO- "https://api.adoptium.net/v3/assets/latest/8/hotspot?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&vendor=adoptium")
+JRE_URL=$(printf '%s' "$JRE_JSON" | jq -r '.[0].binary.package.link')
+if [ -z "$JRE_URL" ] || [ "$JRE_URL" = "null" ]; then
+	echo "Impossible de déterminer l'URL du JRE Adoptium 8." >&2
+	exit 1
+fi
+JRE_ARCHIVE="$(basename "$JRE_URL")"
+wget --retry-connrefused --tries=30 -O "$JRE_ARCHIVE" "$JRE_URL"
+tar -xzf "$JRE_ARCHIVE" --strip-components=1 -C "$JRE_DIR"
+rm -f "$JRE_ARCHIVE"
 
 mkdir -p "$APPDIR/bin" "$APPDIR/shared/bin"
 ln -sf ../JDownloader2 "$APPDIR/bin/JDownloader2"
@@ -44,10 +57,3 @@ mkdir -p dist
 mv -f "$OUTNAME" "dist/$OUTNAME"
 
 echo "AppImage JDownloader2 généré : dist/$OUTNAME"
-
-if command -v zsyncmake >/dev/null 2>&1; then
-	zsyncmake -o "dist/$OUTNAME.zsync" "dist/$OUTNAME"
-    echo "Fichier zsync généré : dist/$OUTNAME.zsync"
-else
-    echo "zsyncmake non trouvé, zsync non généré" >&2
-fi
