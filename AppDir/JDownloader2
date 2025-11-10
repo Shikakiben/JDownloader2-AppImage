@@ -129,25 +129,27 @@ for candidate in "${JAVA_CANDIDATES[@]}"; do
   unset CANDIDATE_MODULE_LIST
 
   if [ "$CANDIDATE_HEADLESS" = 0 ] && [ -n "$CANDIDATE_PREFIX" ]; then
-    if ! find "$CANDIDATE_PREFIX" -maxdepth 3 -type f \( -name 'libawt_xawt.so' -o -name 'libawt_xawt.dylib' \) -print -quit >/dev/null; then
+    CANDIDATE_AWT=$(find "$CANDIDATE_PREFIX" -maxdepth 3 -type f \( -name 'libawt_xawt.so' -o -name 'libawt_xawt.dylib' \) -print -quit 2>/dev/null || printf '')
+    if [ -z "$CANDIDATE_AWT" ]; then
       CANDIDATE_HEADLESS=1
     fi
   fi
 
   if [ "$CANDIDATE_HEADLESS" = 0 ]; then
-    JAVA_BIN="$candidate"
+    JAVA_BIN="$CANDIDATE_REAL"
     JAVA_IS_HEADLESS=0
     break
   fi
 
   if [ -z "$JAVA_HEADLESS_CANDIDATE" ]; then
-    JAVA_HEADLESS_CANDIDATE="$candidate"
+    JAVA_HEADLESS_CANDIDATE="$CANDIDATE_REAL"
   fi
 done
 
 unset CANDIDATE_HEADLESS
 unset CANDIDATE_REAL
 unset CANDIDATE_PREFIX
+unset CANDIDATE_AWT
 
 if [ -z "$JAVA_BIN" ] && [ -n "$JAVA_HEADLESS_CANDIDATE" ]; then
   JAVA_IS_HEADLESS=1
