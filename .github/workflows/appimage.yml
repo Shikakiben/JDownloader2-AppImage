@@ -41,14 +41,21 @@ jobs:
           pattern: AppImage-*
           merge-multiple: true
 
+      - name: Collect AppImage assets
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          find . -maxdepth 3 -type f -name 'JDownloader2-*.AppImage*' -exec cp {} release-assets/ \;
+          ls -l release-assets
+
       - name: Read version information
         run: |
           set -euo pipefail
-          VERSION_FILE=$(find . -maxdepth 3 -type f -name version | head -n 1)
+          VERSION_FILE=$(find release-assets -maxdepth 1 -type f -name version | head -n 1 || true)
           if [ -n "$VERSION_FILE" ]; then
             VERSION=$(cat "$VERSION_FILE")
           else
-            APPIMAGE=$(find . -maxdepth 2 -type f -name 'JDownloader2-*.AppImage' | head -n 1)
+            APPIMAGE=$(find release-assets -maxdepth 1 -type f -name 'JDownloader2-*.AppImage' | head -n 1)
             if [ -z "$APPIMAGE" ]; then
               echo "Unable to determine version (version file and AppImage missing)." >&2
               exit 1
@@ -78,4 +85,4 @@ jobs:
           fail_on_unmatched_files: false
           make_latest: true
           files: |
-            *.AppImage*
+            release-assets/*.AppImage*
