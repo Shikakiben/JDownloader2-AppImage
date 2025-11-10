@@ -99,7 +99,7 @@ if [ -n "$JAVA_BIN" ]; then
     JAVA_REAL="$JAVA_BIN"
   fi
 
-  JAVA_PREFIX=$(cd "$(dirname "$JAVA_REAL")/.." 2>/dev/null || printf '')
+  JAVA_PREFIX=$(cd "$(dirname "$JAVA_REAL")/.." 2>/dev/null && pwd || printf '')
   JAVA_MODULE_LIST=$("$JAVA_BIN" --list-modules 2>/dev/null || true)
   if [ -n "$JAVA_MODULE_LIST" ]; then
     if ! printf '%s\n' "$JAVA_MODULE_LIST" | grep -q '^java.desktop@'; then
