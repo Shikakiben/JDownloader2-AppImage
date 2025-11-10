@@ -109,7 +109,7 @@ if [ -n "$JAVA_BIN" ]; then
   unset JAVA_MODULE_LIST
 
   if [ "$JAVA_IS_HEADLESS" = 0 ] && [ -n "$JAVA_PREFIX" ]; then
-    if [ ! -e "$JAVA_PREFIX/lib/libawt_xawt.so" ] && [ ! -e "$JAVA_PREFIX/lib/libawt.so" ]; then
+    if [ ! -e "$JAVA_PREFIX/lib/libawt_xawt.so" ] || [ ! -e "$JAVA_PREFIX/lib/libfontmanager.so" ]; then
       JAVA_IS_HEADLESS=1
     fi
   fi
