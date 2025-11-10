@@ -77,43 +77,89 @@ fi
 
 JRE_LOCAL="$PERSIST_DIR/jre"
 JAVA_BIN=""
-
-if [ -x "$JRE_LOCAL/bin/java" ]; then
-  JAVA_BIN="$JRE_LOCAL/bin/java"
-elif [ -n "${INSTALL4J_JAVA_HOME:-}" ] && [ -x "$INSTALL4J_JAVA_HOME/bin/java" ]; then
-  JAVA_BIN="$INSTALL4J_JAVA_HOME/bin/java"
-elif [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
-  JAVA_BIN="$JAVA_HOME/bin/java"
-else
-  JAVA_BIN=$(command -v java || true)
-fi
-
-JAVA_IS_HEADLESS=0
 JAVA_PREFIX=""
-if [ -n "$JAVA_BIN" ]; then
-  if command -v readlink >/dev/null 2>&1; then
-    JAVA_REAL=$(readlink -f "$JAVA_BIN" 2>/dev/null || printf '%s' "$JAVA_BIN")
-  elif command -v realpath >/dev/null 2>&1; then
-    JAVA_REAL=$(realpath "$JAVA_BIN" 2>/dev/null || printf '%s' "$JAVA_BIN")
-  else
-    JAVA_REAL="$JAVA_BIN"
-  fi
+JAVA_IS_HEADLESS=0
 
-  JAVA_PREFIX=$(cd "$(dirname "$JAVA_REAL")/.." 2>/dev/null && pwd || printf '')
-  JAVA_MODULE_LIST=$("$JAVA_BIN" --list-modules 2>/dev/null || true)
-  if [ -n "$JAVA_MODULE_LIST" ]; then
-    if ! printf '%s\n' "$JAVA_MODULE_LIST" | grep -q '^java.desktop@'; then
-      JAVA_IS_HEADLESS=1
+declare -a JAVA_CANDIDATES=()
+declare -A JAVA_SEEN=()
+
+add_java_candidate() {
+  local candidate="$1"
+  if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+    if [ -z "${JAVA_SEEN[$candidate]:-}" ]; then
+      JAVA_SEEN["$candidate"]=1
+      JAVA_CANDIDATES+=("$candidate")
     fi
   fi
-  unset JAVA_MODULE_LIST
+}
 
-  if [ "$JAVA_IS_HEADLESS" = 0 ] && [ -n "$JAVA_PREFIX" ]; then
-    if [ ! -e "$JAVA_PREFIX/lib/libawt_xawt.so" ] || [ ! -e "$JAVA_PREFIX/lib/libfontmanager.so" ]; then
-      JAVA_IS_HEADLESS=1
-    fi
-  fi
+add_java_candidate "$JRE_LOCAL/bin/java"
+add_java_candidate "${INSTALL4J_JAVA_HOME:-}/bin/java"
+add_java_candidate "${JAVA_HOME:-}/bin/java"
+
+if command -v java >/dev/null 2>&1; then
+  PATH_JAVA_LIST=$(command -v -a java 2>/dev/null || printf '')
+  while IFS= read -r path; do
+    add_java_candidate "$path"
+  done <<< "$PATH_JAVA_LIST"
+  unset PATH_JAVA_LIST
 fi
+
+JAVA_FIRST_HEADLESS=""
+JAVA_FIRST_HEADLESS_PREFIX=""
+
+for candidate in "${JAVA_CANDIDATES[@]}"; do
+  CANDIDATE_HEADLESS=0
+  if command -v readlink >/dev/null 2>&1; then
+    CANDIDATE_REAL=$(readlink -f "$candidate" 2>/dev/null || printf '%s' "$candidate")
+  elif command -v realpath >/dev/null 2>&1; then
+    CANDIDATE_REAL=$(realpath "$candidate" 2>/dev/null || printf '%s' "$candidate")
+  else
+    CANDIDATE_REAL="$candidate"
+  fi
+
+  CANDIDATE_PREFIX=$(cd "$(dirname "$CANDIDATE_REAL")/.." 2>/dev/null && pwd || printf '')
+  CANDIDATE_MODULE_LIST=$("$candidate" --list-modules 2>/dev/null || true)
+  if [ -n "$CANDIDATE_MODULE_LIST" ]; then
+    if ! printf '%s\n' "$CANDIDATE_MODULE_LIST" | grep -q '^java.desktop@'; then
+      CANDIDATE_HEADLESS=1
+    fi
+  fi
+  unset CANDIDATE_MODULE_LIST
+
+  if [ "$CANDIDATE_HEADLESS" = 0 ] && [ -n "$CANDIDATE_PREFIX" ]; then
+    if [ ! -e "$CANDIDATE_PREFIX/lib/libawt_xawt.so" ] || [ ! -e "$CANDIDATE_PREFIX/lib/libfontmanager.so" ]; then
+      CANDIDATE_HEADLESS=1
+    fi
+  fi
+
+  if [ "$CANDIDATE_HEADLESS" = 0 ]; then
+    JAVA_BIN="$candidate"
+    JAVA_PREFIX="$CANDIDATE_PREFIX"
+    JAVA_IS_HEADLESS=0
+    break
+  fi
+
+  if [ -z "$JAVA_FIRST_HEADLESS" ]; then
+    JAVA_FIRST_HEADLESS="$candidate"
+    JAVA_FIRST_HEADLESS_PREFIX="$CANDIDATE_PREFIX"
+  fi
+done
+
+unset CANDIDATE_HEADLESS
+unset CANDIDATE_REAL
+unset CANDIDATE_PREFIX
+
+if [ -z "$JAVA_BIN" ] && [ -n "$JAVA_FIRST_HEADLESS" ]; then
+  JAVA_BIN="$JAVA_FIRST_HEADLESS"
+  JAVA_PREFIX="$JAVA_FIRST_HEADLESS_PREFIX"
+  JAVA_IS_HEADLESS=1
+fi
+
+unset JAVA_FIRST_HEADLESS
+unset JAVA_FIRST_HEADLESS_PREFIX
+unset JAVA_CANDIDATES
+unset JAVA_SEEN
 
 if [ "$JAVA_IS_HEADLESS" = 1 ]; then
   if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
