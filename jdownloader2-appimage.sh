@@ -46,7 +46,7 @@ mv -f "$OUTNAME" "dist/$OUTNAME"
 echo "AppImage JDownloader2 généré : dist/$OUTNAME"
 
 if command -v zsyncmake >/dev/null 2>&1; then
-    zsyncmake "dist/$OUTNAME"
+	zsyncmake -o "dist/$OUTNAME.zsync" "dist/$OUTNAME"
     echo "Fichier zsync généré : dist/$OUTNAME.zsync"
 else
     echo "zsyncmake non trouvé, zsync non généré" >&2
