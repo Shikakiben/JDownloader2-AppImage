@@ -88,6 +88,34 @@ else
   JAVA_BIN=$(command -v java || true)
 fi
 
+JAVA_IS_HEADLESS=0
+JAVA_PREFIX=""
+if [ -n "$JAVA_BIN" ]; then
+  if command -v readlink >/dev/null 2>&1; then
+    JAVA_REAL=$(readlink -f "$JAVA_BIN" 2>/dev/null || printf '%s' "$JAVA_BIN")
+  elif command -v realpath >/dev/null 2>&1; then
+    JAVA_REAL=$(realpath "$JAVA_BIN" 2>/dev/null || printf '%s' "$JAVA_BIN")
+  else
+    JAVA_REAL="$JAVA_BIN"
+  fi
+
+  JAVA_PREFIX=$(cd "$(dirname "$JAVA_REAL")/.." 2>/dev/null || printf '')
+  if [ -n "$JAVA_PREFIX" ]; then
+    if [ ! -e "$JAVA_PREFIX/lib/libawt_xawt.so" ] && [ ! -e "$JAVA_PREFIX/lib/libawt.so" ]; then
+      JAVA_IS_HEADLESS=1
+    fi
+  fi
+fi
+
+if [ "$JAVA_IS_HEADLESS" = 1 ]; then
+  if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
+    printf 'Avertissement : JVM headless détectée (%s). Certaines fonctionnalités GUI peuvent échouer.\n' "$JAVA_BIN" >&2
+  else
+    printf 'JVM headless détectée (%s). Téléchargement d\'un JRE complet Temurin 25 local.\n' "$JAVA_BIN" >&2
+    JAVA_BIN=""
+  fi
+fi
+
 if [ -z "$JAVA_BIN" ]; then
   if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
     echo "Erreur : aucune JVM disponible et téléchargement automatique désactivé (JD2_APPIMAGE_SKIP_JRE_FETCH=1)." >&2
