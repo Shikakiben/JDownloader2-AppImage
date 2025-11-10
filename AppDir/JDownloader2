@@ -111,7 +111,7 @@ if [ "$JAVA_IS_HEADLESS" = 1 ]; then
   if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
     printf 'Avertissement : JVM headless détectée (%s). Certaines fonctionnalités GUI peuvent échouer.\n' "$JAVA_BIN" >&2
   else
-    printf 'JVM headless détectée (%s). Téléchargement d\'un JRE complet Temurin 25 local.\n' "$JAVA_BIN" >&2
+    printf "JVM headless détectée (%s). Téléchargement d'un JRE complet Temurin 25 local.\n" "$JAVA_BIN" >&2
     JAVA_BIN=""
   fi
 fi
