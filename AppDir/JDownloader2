@@ -50,7 +50,10 @@ if [ "$PREVIOUS_STAMP" != "$CURRENT_STAMP" ]; then
   fi
 
   if command -v rsync >/dev/null 2>&1; then
-    RSYNC_ARGS=(-a --no-perms --no-owner --no-group --exclude 'jre.tar.gz')
+      RSYNC_ARGS=(-a --no-perms --no-owner --no-group)
+      if [ -z "${JD2_APPIMAGE_BUILD:-}" ]; then
+        RSYNC_ARGS+=(--exclude 'jre.tar.gz')
+      fi
       case "$PERSIST_DIR" in
         "$APP_BUNDLE_ROOT"/*)
           RSYNC_ARGS+=(--exclude "$(basename "$PERSIST_DIR")")
@@ -58,7 +61,11 @@ if [ "$PREVIOUS_STAMP" != "$CURRENT_STAMP" ]; then
       esac
       rsync "${RSYNC_ARGS[@]}" "$APP_BUNDLE_ROOT/" "$PERSIST_DIR/"
   else
-    find "$APP_BUNDLE_ROOT" -mindepth 1 -maxdepth 1 ! -name 'jre.tar.gz' -exec cp -r {} "$PERSIST_DIR/" \;
+      if [ -z "${JD2_APPIMAGE_BUILD:-}" ]; then
+        find "$APP_BUNDLE_ROOT" -mindepth 1 -maxdepth 1 ! -name 'jre.tar.gz' -exec cp -r {} "$PERSIST_DIR/" \;
+      else
+        cp -r "$APP_BUNDLE_ROOT/." "$PERSIST_DIR/"
+      fi
   fi
 
   printf '%s\n' "$CURRENT_STAMP" > "$STAMP_FILE"
