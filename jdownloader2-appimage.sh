@@ -49,15 +49,15 @@ ln -sf ../../JDownloader2 "$APPDIR/shared/bin/JDownloader2"
 export OUTNAME
 export JD2_APPIMAGE_BUILD=1
 export JD2_APPIMAGE_BUNDLE_DIR="$APPDIR"
-export JD2_APPIMAGE_DATA_DIR="$APPDIR/.persist"
+export JD2_APPIMAGE_DATA_DIR=""
 export XDG_DATA_HOME="$APPDIR/.xdg-data"
 export XDG_CONFIG_HOME="$APPDIR/.xdg-config"
 export OUTPUT_APPIMAGE=1
 
-mkdir -p "$JD2_APPIMAGE_DATA_DIR" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
 
 cleanup() {
-	rm -rf "$JD2_APPIMAGE_DATA_DIR" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+	rm -rf "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
 }
 trap cleanup EXIT
 
