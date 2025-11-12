@@ -28,7 +28,11 @@ else
 fi
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2}"
+if [ "${JD2_APPIMAGE_BUILD:-}" = "1" ]; then
+  PERSIST_DIR="$DATA_HOME/JDownloader2"
+else
+  PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2}"
+fi
 STAMP_FILE="$PERSIST_DIR/.appimage-source"
 STAMP_SOURCE="$APP_BUNDLE_ROOT/JDownloader.jar"
 
