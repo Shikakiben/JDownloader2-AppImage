@@ -49,18 +49,23 @@ ln -sf ../../JDownloader2 "$APPDIR/shared/bin/JDownloader2"
 export OUTNAME
 export JD2_APPIMAGE_BUILD=1
 export JD2_APPIMAGE_BUNDLE_DIR="$APPDIR"
+export JD2_APPIMAGE_DATA_DIR="$APPDIR/.persist"
 export XDG_DATA_HOME="$APPDIR/.xdg-data"
 export XDG_CONFIG_HOME="$APPDIR/.xdg-config"
 export OUTPUT_APPIMAGE=1
-mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+
+mkdir -p "$JD2_APPIMAGE_DATA_DIR" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
 
 cleanup() {
-	rm -rf "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+	rm -rf "$JD2_APPIMAGE_DATA_DIR" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
 }
 trap cleanup EXIT
 
 wget --retry-connrefused --tries=30 "https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/main/useful-tools/quick-sharun.sh" -O ./quick-sharun
 chmod +x ./quick-sharun
+
+# Suppression du dossier .persist avant la création de l'AppImage
+rm -rf "$APPDIR/.persist"
 
 ./quick-sharun "$APPDIR/JDownloader2"
 
