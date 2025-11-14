@@ -28,7 +28,11 @@ else
 fi
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2-AppImage}"
+if [ "${JD2_APPIMAGE_BUILD:-}" = "1" ]; then
+  # Pas d'initialisation du profil pendant le build
+  exit 0
+fi
+PERSIST_DIR="${JD2_APPIMAGE_DATA_DIR:-$DATA_HOME/JDownloader2}"
 STAMP_FILE="$PERSIST_DIR/.appimage-source"
 STAMP_SOURCE="$APP_BUNDLE_ROOT/JDownloader.jar"
 
@@ -51,6 +55,10 @@ if [ "$PREVIOUS_STAMP" != "$CURRENT_STAMP" ]; then
 
   if command -v rsync >/dev/null 2>&1; then
       RSYNC_ARGS=(-a --no-perms --no-owner --no-group)
+      if [ -z "${JD2_APPIMAGE_BUILD:-}" ]; then
+         RSYNC_ARGS+=(--exclude 'jre.tar.gz')
+         RSYNC_ARGS+=(--exclude '.persist')
+      fi
       case "$PERSIST_DIR" in
         "$APP_BUNDLE_ROOT"/*)
           RSYNC_ARGS+=(--exclude "$(basename "$PERSIST_DIR")")
@@ -58,7 +66,11 @@ if [ "$PREVIOUS_STAMP" != "$CURRENT_STAMP" ]; then
       esac
       rsync "${RSYNC_ARGS[@]}" "$APP_BUNDLE_ROOT/" "$PERSIST_DIR/"
   else
-      cp -r "$APP_BUNDLE_ROOT/." "$PERSIST_DIR/"
+      if [ -z "${JD2_APPIMAGE_BUILD:-}" ]; then
+        find "$APP_BUNDLE_ROOT" -mindepth 1 -maxdepth 1 ! -name 'jre.tar.gz' ! -name '.persist' -exec cp -r {} "$PERSIST_DIR/" \;
+      else
+        cp -r "$APP_BUNDLE_ROOT/." "$PERSIST_DIR/"
+      fi
   fi
 
   printf '%s\n' "$CURRENT_STAMP" > "$STAMP_FILE"
@@ -246,66 +258,23 @@ if [ -n "$JAVA_BIN" ] && [ "${JAVA_BIN#$JRE_LOCAL/}" = "$JAVA_BIN" ]; then
 fi
 
 if [ -z "$JAVA_BIN" ]; then
-  if [ "${JD2_APPIMAGE_SKIP_JRE_FETCH:-}" = "1" ]; then
-    echo "Erreur : aucune JVM disponible et téléchargement automatique désactivé (JD2_APPIMAGE_SKIP_JRE_FETCH=1)." >&2
+  # Si aucun JRE système, décompresser l'archive embarquée AppDir/jre.tar.gz
+  JRE_ARCHIVE="$APP_BUNDLE_ROOT/jre.tar.gz"
+  if [ ! -f "$JRE_ARCHIVE" ]; then
+    echo "Erreur : aucune JVM disponible et aucune archive JRE embarquée ($JRE_ARCHIVE)." >&2
     exit 83
   fi
-
-  if [ -z "${JD2_APPIMAGE_JRE_URL:-}" ]; then
-    API_URL="https://api.adoptium.net/v3/assets/latest/25/hotspot?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&vendor=adoptium"
-    if command -v jq >/dev/null 2>&1; then
-      if command -v wget >/dev/null 2>&1; then
-        JRE_JSON=$(wget -qO- "$API_URL" || true)
-      else
-        JRE_JSON=$(curl -sSL "$API_URL" || true)
-      fi
-      JRE_URL=$(printf '%s' "$JRE_JSON" | jq -r '.[0].binary.package.link' 2>/dev/null || printf '')
-    fi
-
-    if [ -z "$JRE_URL" ] || [ "$JRE_URL" = "null" ]; then
-      JRE_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.1%2B8/OpenJDK25U-jre_x64_linux_hotspot_25.0.1_8.tar.gz"
-    fi
-  else
-    JRE_URL="$JD2_APPIMAGE_JRE_URL"
-  fi
-
-  if [ -z "$JRE_URL" ] || [ "$JRE_URL" = "null" ]; then
-    echo "Erreur : impossible d'obtenir l'URL d'un JRE compatible." >&2
+  if ! command -v tar >/dev/null 2>&1; then
+    echo "Erreur : l'outil tar est requis pour décompresser le JRE embarqué." >&2
     exit 83
   fi
-  TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t jd2jre)
-  TARBALL="$TMPDIR/jre.tar.gz"
-
-  echo "Téléchargement d'un JRE compatible depuis $JRE_URL" >&2
-  if ! command -v wget >/dev/null 2>&1 && ! command -v curl >/dev/null 2>&1; then
-    echo "Erreur : wget ou curl est requis pour récupérer le JRE manquant." >&2
-    rm -rf "$TMPDIR"
-    exit 83
-  fi
-
-  if command -v wget >/dev/null 2>&1; then
-    if ! wget --retry-connrefused --tries=30 -O "$TARBALL" "$JRE_URL"; then
-      echo "Erreur : impossible de télécharger le JRE." >&2
-      rm -rf "$TMPDIR"
-      exit 83
-    fi
-  else
-    if ! curl -L --retry 30 --retry-connrefused -o "$TARBALL" "$JRE_URL"; then
-      echo "Erreur : impossible de télécharger le JRE." >&2
-      rm -rf "$TMPDIR"
-      exit 83
-    fi
-  fi
-
+  echo "Décompression du JRE embarqué depuis $JRE_ARCHIVE dans $JRE_LOCAL" >&2
   rm -rf "$JRE_LOCAL"
   mkdir -p "$JRE_LOCAL"
-  if ! tar -xzf "$TARBALL" --strip-components=1 -C "$JRE_LOCAL"; then
-    echo "Erreur : impossible d'extraire le JRE téléchargé." >&2
-    rm -rf "$TMPDIR"
+  if ! tar -xzf "$JRE_ARCHIVE" --strip-components=1 -C "$JRE_LOCAL"; then
+    echo "Erreur : impossible d'extraire le JRE embarqué." >&2
     exit 83
   fi
-  rm -rf "$TMPDIR"
-
   if [ -x "$JRE_LOCAL/bin/java" ]; then
     JAVA_BIN="$JRE_LOCAL/bin/java"
   fi
