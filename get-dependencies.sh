@@ -2,17 +2,28 @@
 
 set -eux
 
+ARCH="$(uname -m)"
 
+echo "Installing build dependencies for sharun & AppImage integration..."
+echo "---------------------------------------------------------------"
 
-# Installer les dépendances nécessaires pour le build AppImage et quick-sharun
 pacman -Syu --noconfirm \
-    wget \
-    p7zip \
-    gzip \
-    which \
-    desktop-file-utils \
-    libxtst \
-    zsync \
+	base-devel \
+	desktop-file-utils \
+	git \
+	libxtst \
+	wget \
+	zsync \
     jq
+   
 
-echo "Dépendances et JDownloader2 installés."
+echo "Installing the app & it's dependencies..."
+echo "---------------------------------------------------------------"
+
+JDOWNLOADER_JAR="https://installer.jdownloader.org/JDownloader.jar"
+JRE_API_URL="https://api.adoptium.net/v3/assets/latest/25/hotspot?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&vendor=adoptium"
+JRE_URL=$(wget -qO- --retry-connrefused --tries=30 "$JRE_API_URL" | jq -r '.[0].binary.package.link')
+
+wget --retry-connrefused --tries=30 "$JDOWNLOADER_JAR" -O ./AppDir/JDownloader.jar
+wget --retry-connrefused --tries=30 "$JRE_URL" -O ./AppDir/jre.tar.gz 
+
