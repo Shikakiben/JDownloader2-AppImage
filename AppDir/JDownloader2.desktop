@@ -5,4 +5,4 @@ Name=JDownloader2
 Exec=JDownloader2 %U
 Icon=jdownloader2
 Categories=Network;Application;
-StartupWMClass=JDowloader
+StartupWMClass=org-jdownloader-update-launcher-JDLauncher
