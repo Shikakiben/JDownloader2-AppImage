@@ -30,7 +30,7 @@ get-debloated-pkgs --add-common --prefer-nano
 # If the application needs to be manually built that has to be done down here
 
 chmod +x ./JDownloader2Setup_unix_nojre.sh
-./JDownloader2Setup_unix_nojre.sh
+xvfb-run ./JDownloader2Setup_unix_nojre.sh
 
 #mkdir -p ./AppDir/bin
 cp -rv "$HOME/jd2"/* ./AppDir/bin/
