@@ -15,8 +15,9 @@ pacman -Syu --noconfirm \
 	wget \
 	zsync \
     jq \
-	jre-openjdk
-   
+	jre-openjdk \
+	xorg-server-xvfb
+    
 
 echo "Installing debloated packages..."
 echo "---------------------------------------------------------------"
