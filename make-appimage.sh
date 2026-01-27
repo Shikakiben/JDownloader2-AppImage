@@ -12,7 +12,7 @@ export UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}
 # Deploy dependencies
 quick-sharun \
         ./AppDir/bin/* \
-        /usr/lib/jvm/*
+        #/usr/lib/jvm/default/*
 
 # Make the AppImage with uruntime
 quick-sharun --make-appimage
