@@ -15,19 +15,19 @@
 
 
 
-AppImage made using [sharun](https://github.com/VHSgunzo/sharun), which makes it extremely easy to turn any binary into a portable package without using containers or similar tricks.
+AppImage made using sharun, which makes it extremely easy to turn any binary into a portable package without using containers or similar tricks.
 
-**⚠️ In this particular case, JDownloader2 requires both `Java` and `bash` to run. This AppImage includes a bundled JRE for convenience, and `bash` is already installed by default on all major Linux distributions. However, if you're using Alpine Linux (musl-based) or another minimal system, you may need to install `OpenJDK` and `bash` via your package manager.**
+This AppImage bundles everything and should work on any linux distro, even on musl based ones.
 
-This AppImage can work **without FUSE** at all thanks to the [uruntime](https://github.com/VHSgunzo/uruntime)
+This AppImage can work without FUSE at all thanks to the uruntime
 
-It is possible that this appimage may fail to work with appimagelauncher, I recommend using AM:
-
-
+I recommend using AM:
 
 * [AM](https://github.com/ivan-hc/AM) `am -i jdownloader2` or `appman -i jdownloader2 `
 
+or:
 
+* [AM-GUI](https://github.com/Shikakiben/AM-GUI)  simply search "jdownloader2" and install it
 
 More at: [AnyLinux-AppImages](https://pkgforge-dev.github.io/Anylinux-AppImages/)
 
