@@ -2,7 +2,7 @@
 [Desktop Entry]
 Type=Application
 Name=JDownloader2
-Exec=JDownloader2 %U
+Exec=JDownloader2.sh %U
 Icon=jdownloader2
 Categories=Network;Downloader;FileTransfer;Utility;
 StartupWMClass=org-jdownloader-update-launcher-JDLauncher
