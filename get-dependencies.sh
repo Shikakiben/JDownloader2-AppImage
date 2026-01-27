@@ -15,8 +15,8 @@ pacman -Syu --noconfirm \
 	wget \
 	zsync \
     jq \
-	jre-openjdk \
-	xorg-server-xvfb
+	jre-openjdk
+	
     
 
 echo "Installing debloated packages..."
@@ -29,8 +29,4 @@ get-debloated-pkgs --add-common --prefer-nano
 
 # If the application needs to be manually built that has to be done down here
 
-chmod +x ./JDownloader2Setup_unix_nojre.sh
-xvfb-run ./JDownloader2Setup_unix_nojre.sh
-
-#mkdir -p ./AppDir/bin
-cp -rv "$HOME/jd2"/* ./AppDir/bin/
+wget --retry-connrefused --tries=30 "https://installer.jdownloader.org/JDownloader.jar" -O ./AppDir/bin/JDownloader.jar

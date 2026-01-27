@@ -4,5 +4,5 @@ Type=Application
 Name=JDownloader2
 Exec=JDownloader2 %U
 Icon=jdownloader2
-Categories=Network;Application;
-StartupWMClass=install4j-org-jdownloader-update-launcher-JDLauncher
+Categories=Network;Downloader;FileTransfer;Utility;
+StartupWMClass=org-jdownloader-update-launcher-JDLauncher
