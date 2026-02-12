@@ -1,4 +1,4 @@
-#  Unofficial JDownloader2-AppImage 🐧
+#  Unofficial JDownloader 2 - AppImage 🐧
 
 [![GitHub Downloads](https://img.shields.io/github/downloads/Shikakiben/JDownloader2-AppImage/total?logo=github&label=GitHub%20Downloads)](https://github.com/Shikakiben/JDownloader2-AppImage/releases/latest)
 [![CI Build Status](https://github.com//Shikakiben/JDownloader2-AppImage/actions/workflows/appimage.yml/badge.svg)](https://github.com/Shikakiben/JDownloader2-AppImage/releases/latest)
